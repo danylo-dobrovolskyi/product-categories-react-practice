@@ -21,21 +21,53 @@ const products = productsFromServer.map((product) => {
 
 export const App = () => {
   const [selectedUser, setSelectedUser] = useState(0);
+  const [query, setQuery] = useState('');
   const [visibleProducts, setVisibleProducts] = useState(products);
 
   const handleUserClick = (id) => {
-    setSelectedUser(id);
-
-    const filteredProducts = products.filter(product => (
+    setVisibleProducts(id);
+    const productsToShow = products.filter(product => (
       product.user.id === id
     ));
 
-    setVisibleProducts(filteredProducts);
+    setVisibleProducts(productsToShow);
+  };
+
+  const handleSearchReset = () => {
+    setQuery('');
+    setVisibleProducts(products);
   };
 
   const handleUserReset = () => {
     setSelectedUser(null);
     setVisibleProducts(products);
+    setQuery('');
+  };
+
+  const isValidProduct = (productName, value) => {
+    const formattedtName = productName.toLowerCase();
+    const formattedValue = value.toLowerCase().trim();
+
+    return formattedtName.includes(formattedValue);
+  };
+
+  const handleInputChange = ({ target }) => {
+    const { value } = target;
+
+    setQuery(value);
+    let sortedProducts = products
+      .filter(product => isValidProduct(product.name, value));
+
+    if (selectedUser) {
+      sortedProducts = products.filter(product => (
+        product.user.id === selectedUser
+        && isValidProduct(product.name, value)
+      ));
+
+      setVisibleProducts(sortedProducts);
+    }
+
+    setVisibleProducts(sortedProducts);
   };
 
   return (
@@ -85,21 +117,25 @@ export const App = () => {
                   type="text"
                   className="input"
                   placeholder="Search"
-                  value="qwe"
+                  value={query}
+                  onChange={handleInputChange}
                 />
 
                 <span className="icon is-left">
                   <i className="fas fa-search" aria-hidden="true" />
                 </span>
 
+                {query && (
                 <span className="icon is-right">
                   {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
                   <button
                     data-cy="ClearButton"
                     type="button"
                     className="delete"
+                    onClick={handleSearchReset}
                   />
                 </span>
+                )}
               </p>
             </div>
 
@@ -149,6 +185,7 @@ export const App = () => {
                 data-cy="ResetAllButton"
                 href="#/"
                 className="button is-link is-outlined is-fullwidth"
+                onClick={handleUserReset}
               >
                 Reset all filters
               </a>
